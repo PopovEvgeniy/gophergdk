@@ -27,8 +27,32 @@ SVGALib homepage: http://www.svgalib.org/
 
 #include "gophergdk.h"
 
+namespace OSS_BACKEND
+{
+ volatile int sound_device=-1;
+ volatile size_t sound_buffer_length=0;
+ volatile bool run_stream=true;
+ volatile bool do_play=false;
+ void *sound_buffer=NULL;
+}
+
 namespace GOPHERGDK
 {
+
+void* sound_play_sample(void *argument)
+{
+ while (OSS_BACKEND::run_stream)
+ {
+  if (OSS_BACKEND::do_play)
+  {
+   while (write(OSS_BACKEND::sound_device,OSS_BACKEND::sound_buffer,OSS_BACKEND::sound_buffer_length)>0) ;
+   OSS_BACKEND::do_play=false;
+  }
+
+ }
+ if (OSS_BACKEND::sound_device!=-1) close(OSS_BACKEND::sound_device);
+ return NULL;
+}
 
 void Halt(const char *message)
 {
@@ -593,6 +617,98 @@ unsigned long int Memory::get_free_memory()
  return memory;
 }
 
+Sound::Sound()
+{
+ stream=0;
+}
+
+Sound::~Sound()
+{
+ OSS_BACKEND::run_stream=false;
+}
+
+void Sound::open_device()
+{
+ OSS_BACKEND::sound_device=open("/dev/dsp",O_WRONLY|O_NONBLOCK,S_IRUSR|S_IWUSR|S_IXUSR|S_IRGRP|S_IWGRP|S_IXGRP|S_IROTH|S_IWOTH|S_IXOTH);
+ if (OSS_BACKEND::sound_device==-1)
+ {
+  Halt("Can't get access to sound card");
+ }
+
+}
+
+void Sound::set_format()
+{
+ int format;
+ format=AFMT_S16_LE;
+ if(ioctl(OSS_BACKEND::sound_device,SNDCTL_DSP_SETFMT,&format)==-1)
+ {
+  Halt("Can't set sound format");
+ }
+
+}
+
+void Sound::set_channels()
+{
+ int channels;
+ channels=SOUND_CHANNELS;
+ if(ioctl(OSS_BACKEND::sound_device,SNDCTL_DSP_CHANNELS,&channels)==-1)
+ {
+  Halt("Can't set number of audio channels");
+ }
+
+}
+
+void Sound::set_rate()
+{
+ int rate;
+ rate=SOUND_RATE;
+ if(ioctl(OSS_BACKEND::sound_device,SNDCTL_DSP_SPEED,&rate)==-1)
+ {
+  Halt("Can't set sample rate");
+ }
+
+}
+
+void Sound::start_stream()
+{
+ if (pthread_create(&stream,NULL,sound_play_sample,NULL)!=0)
+ {
+  Halt("Can't start sound stream");
+ }
+
+}
+
+void Sound::initialize()
+{
+ this->open_device();
+ this->set_format();
+ this->set_rate();
+ this->set_channels();
+ this->start_stream();
+}
+
+bool Sound::check_busy()
+{
+ return OSS_BACKEND::do_play;
+}
+
+void Sound::play_sample(void *buffer,const size_t length)
+{
+ if (OSS_BACKEND::do_play==false)
+ {
+  OSS_BACKEND::sound_buffer=buffer;
+  OSS_BACKEND::sound_buffer_length=length;
+  OSS_BACKEND::do_play=true;
+ }
+
+}
+
+Sound* Sound::get_handle()
+{
+ return this;
+}
+
 System::System()
 {
  srand(time(NULL));
@@ -747,6 +863,100 @@ bool Binary_File::check_error()
  result=false;
  if(ferror(target)!=0) result=true;
  return result;
+}
+
+Player::Player()
+{
+ sound=NULL;
+ data=NULL;
+ sample=0;
+ index=0;
+ length=0;
+}
+
+Player::~Player()
+{
+ sound=NULL;
+ if(data!=NULL) free(data);
+}
+
+void Player::unload()
+{
+ sample=0;
+ index=0;
+ length=0;
+ if(data!=NULL) free(data);
+}
+
+void Player::load(unsigned char *audio,unsigned long int total,unsigned long int sample_length)
+{
+ this->unload();
+ data=audio;
+ length=total;
+ sample=sample_length;
+}
+
+void Player::initialize(Sound *target)
+{
+ sound=target;
+}
+
+bool Player::play()
+{
+ bool result;
+ unsigned long int piece;
+ piece=sample;
+ result=false;
+ if(index<length)
+ {
+  if (piece>length-index) piece=length-index;
+  if (sound->check_busy()==false)
+  {
+   sound->play_sample(data+index,piece);
+   index+=piece;
+   result=true;
+  }
+
+ }
+ return result;
+}
+
+void Player::rewind_audio()
+{
+ index=0;
+}
+
+void Audio::load_wave(const char *name,Player &player)
+{
+ FILE *target;
+ WAVE_head head;
+ unsigned char *data;
+ target=fopen(name,"rb");
+ if(target==NULL)
+ {
+  puts("Can't open a sound file");
+  exit(EXIT_FAILURE);
+ }
+ fread(&head,44,1,target);
+ if((strncmp(head.riff_signature,"RIFF",4)!=0)&&(strncmp(head.wave_signature,"WAVE",4)!=0))
+ {
+  puts("Incorrect sound format");
+  exit(EXIT_FAILURE);
+ }
+ if((head.type!=1)&&(head.bits!=16))
+ {
+  puts("Incorrect sound format");
+  exit(EXIT_FAILURE);
+ }
+ data=(unsigned char*)calloc(head.sample_length,1);
+ if(data==NULL)
+ {
+  puts("Can't allocate memory for sound buffer");
+  exit(EXIT_FAILURE);
+ }
+ fread(data,head.sample_length,1,target);
+ fclose(target);
+ player.load(data,head.sample_length,head.bytes);
 }
 
 Timer::Timer()

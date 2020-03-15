@@ -33,10 +33,15 @@ SVGALib homepage: http://www.svgalib.org/
 #include <time.h>
 #include <fcntl.h>
 #include <unistd.h>
+#include <pthread.h>
 #include <sys/sysinfo.h>
 #include <sys/ioctl.h>
+#include <sys/soundcard.h>
 #include <linux/input.h>
 #include <linux/fb.h>
+
+#define SOUND_RATE 44100
+#define SOUND_CHANNELS 2
 
 #define GAMEPAD_PRESS 1
 #define GAMEPAD_RELEASE 0
@@ -46,6 +51,23 @@ enum GAMEPAD_BUTTONS {BUTTON_UP=0,BUTTON_DOWN=1,BUTTON_LEFT=2,BUTTON_RIGHT=3,BUT
 enum MIRROR_TYPE {MIRROR_HORIZONTAL=0,MIRROR_VERTICAL=1};
 enum BACKGROUND_TYPE {NORMAL_BACKGROUND=0,HORIZONTAL_BACKGROUND=1,VERTICAL_BACKGROUND=2};
 enum SPRITE_TYPE {SINGLE_SPRITE=0,HORIZONTAL_STRIP=1,VERTICAL_STRIP=2};
+
+struct WAVE_head
+{
+ char riff_signature[4];
+ unsigned long int riff_length:32;
+ char wave_signature[4];
+ char format[4];
+ unsigned long int wave_length:32;
+ unsigned short int type:16;
+ unsigned short int channels:16;
+ unsigned long int rate:32;
+ unsigned long int bytes:32;
+ unsigned short int align:16;
+ unsigned short int bits:16;
+ char sample_signature[4];
+ unsigned long int sample_length:32;
+};
 
 struct IMG_Pixel
 {
@@ -112,6 +134,7 @@ struct Collision_Box
 namespace GOPHERGDK
 {
 
+void* sound_play_sample(void *argument);
 void Halt(const char *message);
 
 class Frame
@@ -255,6 +278,24 @@ class Memory
  unsigned long int get_free_memory();
 };
 
+class Sound
+{
+ private:
+ pthread_t stream;
+ void open_device();
+ void set_format();
+ void set_channels();
+ void set_rate();
+ void start_stream();
+ public:
+ Sound();
+ ~Sound();
+ void initialize();
+ bool check_busy();
+ void play_sample(void *buffer,const size_t length);
+ Sound* get_handle();
+};
+
 class System
 {
  public:
@@ -287,6 +328,30 @@ class Binary_File
  void read(void *buffer,const size_t length);
  void write(void *buffer,const size_t length);
  bool check_error();
+};
+
+class Player
+{
+ private:
+ Sound *sound;
+ unsigned char *data;
+ unsigned long int sample;
+ unsigned long int index;
+ unsigned long int length;
+ public:
+ Player();
+ ~Player();
+ void unload();
+ void load(unsigned char *audio,unsigned long int total,unsigned long int sample_length);
+ void initialize(Sound *target);
+ bool play();
+ void rewind_audio();
+};
+
+class Audio
+{
+ public:
+ void load_wave(const char *name,Player &player);
 };
 
 class Timer

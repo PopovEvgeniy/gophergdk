@@ -6,6 +6,9 @@ int main(void)
  char perfomance[8];
  GOPHERGDK::Screen screen;
  GOPHERGDK::Gamepad gamepad;
+ GOPHERGDK::Sound sound;
+ GOPHERGDK::Audio audio;
+ GOPHERGDK::Player player;
  GOPHERGDK::Timer timer;
  GOPHERGDK::Image image;
  GOPHERGDK::Background space;
@@ -32,11 +35,15 @@ int main(void)
  screen.clear_screen();
  text.set_position(font.get_width(),font.get_height());
  timer.set_timer(1);
+ sound.initialize();
+ player.initialize(sound.get_handle());
+ audio.load_wave("space.wav",player);
  memset(perfomance,0,8);
  while(1)
  {
   screen.update();
   gamepad.update();
+  if(player.play()==false) player.rewind_audio();
   if(gamepad.check_press(BUTTON_A)==true) break;
   if(gamepad.check_press(BUTTON_Z)==true) ship.mirror_image(MIRROR_HORIZONTAL);
   if(gamepad.check_press(BUTTON_C)==true) ship.mirror_image(MIRROR_VERTICAL);

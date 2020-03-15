@@ -1,4 +1,4 @@
-flags=-g0 -O0
+flags=-g0 -O0 -pthread
 
 library:
 	@mipsel-linux-uclibc-g++ -c gophergdk.cpp $(flags) -o gophergdk.o
