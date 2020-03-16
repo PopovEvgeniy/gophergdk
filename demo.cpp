@@ -4,6 +4,7 @@ int main(void)
 {
  long int x,y,screen_width,screen_height;
  char perfomance[8];
+ GOPHERGDK::Backlight light;
  GOPHERGDK::Screen screen;
  GOPHERGDK::Gamepad gamepad;
  GOPHERGDK::Sound sound;
@@ -39,20 +40,23 @@ int main(void)
  player.initialize(sound.get_handle());
  audio.load_wave("space.wav",player);
  memset(perfomance,0,8);
+ light.set_level(light.get_minimum());
  while(1)
  {
   screen.update();
   gamepad.update();
-  if(player.play()==false) player.rewind_audio();
-  if(gamepad.check_press(BUTTON_A)==true) break;
-  if(gamepad.check_press(BUTTON_Z)==true) ship.mirror_image(MIRROR_HORIZONTAL);
-  if(gamepad.check_press(BUTTON_C)==true) ship.mirror_image(MIRROR_VERTICAL);
-  if(gamepad.check_hold(BUTTON_UP)==true) y-=4;
-  if(gamepad.check_hold(BUTTON_DOWN)==true) y+=4;
-  if(gamepad.check_hold(BUTTON_LEFT)==true) x-=4;
-  if(gamepad.check_hold(BUTTON_RIGHT)==true) x+=4;
-  if((x<=0)||(x>=screen_width)) x=screen_width/2;
-  if((y<=0)||(y>=screen_height)) y=screen_height/2;
+  if (player.play()==false) player.rewind_audio();
+  if (gamepad.check_press(BUTTON_START)==true) break;
+  if (gamepad.check_press(BUTTON_A)==true) ship.mirror_image(MIRROR_HORIZONTAL);
+  if (gamepad.check_press(BUTTON_B)==true) ship.mirror_image(MIRROR_VERTICAL);
+  if (gamepad.check_hold(BUTTON_X)==true) light.increase_level();
+  if (gamepad.check_hold(BUTTON_Y)==true) light.decrease_level();
+  if (gamepad.check_hold(BUTTON_UP)==true) y-=4;
+  if (gamepad.check_hold(BUTTON_DOWN)==true) y+=4;
+  if (gamepad.check_hold(BUTTON_LEFT)==true) x-=4;
+  if (gamepad.check_hold(BUTTON_RIGHT)==true) x+=4;
+  if ((x<=0)||(x>=screen_width)) x=screen_width/2;
+  if ((y<=0)||(y>=screen_height)) y=screen_height/2;
   sprintf(perfomance,"%ld",screen.get_fps());
   space.draw_background();
   text.draw_text(perfomance);
