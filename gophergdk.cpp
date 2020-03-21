@@ -755,7 +755,7 @@ Sound::~Sound()
 
 void Sound::open_device()
 {
- OSS_BACKEND::sound_device=open("/dev/dsp",O_WRONLY|O_NONBLOCK,S_IRUSR|S_IWUSR|S_IXUSR|S_IRGRP|S_IWGRP|S_IXGRP|S_IROTH|S_IWOTH|S_IXOTH);
+ OSS_BACKEND::sound_device=open("/dev/dsp",O_WRONLY|O_NONBLOCK,S_IRWXU|S_IRWXG|S_IRWXO);
  if (OSS_BACKEND::sound_device==-1)
  {
   Halt("Can't get access to sound card");
@@ -991,35 +991,176 @@ bool Binary_File::check_error()
  return result;
 }
 
+Audio::Audio()
+{
+ buffer=NULL;
+ memset(&head,0,44);
+}
+
+Audio::~Audio()
+{
+ if (buffer!=NULL)
+ {
+  free(buffer);
+  buffer=NULL;
+ }
+
+}
+
+void Audio::read_head()
+{
+ target.read(&head,44);
+}
+
+void Audio::check_riff_signature()
+{
+ if (strncmp(head.riff_signature,"RIFF",4)!=0)
+ {
+  Halt("Incorrect riff signature");
+ }
+
+}
+
+void Audio::check_wave_signature()
+{
+ if (strncmp(head.wave_signature,"WAVE",4)!=0)
+ {
+  Halt("Incorrect wave signature");
+ }
+
+}
+
+void Audio::check_type()
+{
+ if (head.type!=1)
+ {
+  Halt("Incorrect type of wave file");
+ }
+
+}
+
+void Audio::check_bits()
+{
+ if (head.bits!=16)
+ {
+  Halt("Incorrect amount of sound bits");
+ }
+
+}
+
+void Audio::check_channels()
+{
+ if ((head.channels==0)||(head.channels>2))
+ {
+  Halt("Incorrect number of audio channels");
+ }
+
+}
+
+void Audio::check_wave()
+{
+ this->check_riff_signature();
+ this->check_wave_signature();
+ this->check_type();
+ this->check_bits();
+ this->check_channels();
+}
+
+void Audio::clear_buffer()
+{
+ if (buffer!=NULL)
+ {
+  free(buffer);
+  buffer=NULL;
+ }
+
+}
+
+void Audio::create_buffer()
+{
+ buffer=(char*)calloc((size_t)head.block_length,sizeof(char));
+ if (buffer==NULL)
+ {
+  Halt("Can't allocate memory for audio block");
+ }
+
+}
+
+Audio* Audio::get_handle()
+{
+ return this;
+}
+
+size_t Audio::get_total()
+{
+ return (size_t)head.date_length;
+}
+
+size_t Audio::get_block()
+{
+ return (size_t)head.block_length;
+}
+
+size_t Audio::get_block_amount()
+{
+ return this->get_total()/this->get_block();
+}
+
+unsigned long int Audio::get_rate()
+{
+ return head.rate;
+}
+
+unsigned short int Audio::get_channels()
+{
+ return head.channels;
+}
+
+void Audio::load_wave(const char *name)
+{
+ target.close();
+ target.open_read(name);
+ this->read_head();
+ this->check_wave();
+ this->clear_buffer();
+ this->create_buffer();
+}
+
+char *Audio::read_block()
+{
+ target.read(buffer,this->get_block());
+ return buffer;
+}
+
+void Audio::go_start()
+{
+ target.set_position(44);
+}
+
 Player::Player()
 {
  sound=NULL;
- data=NULL;
- sample=0;
+ target=NULL;
  index=0;
  length=0;
 }
 
 Player::~Player()
 {
- sound=NULL;
- if(data!=NULL) free(data);
+
 }
 
-void Player::unload()
+void Player::rewind_audio()
 {
- sample=0;
  index=0;
- length=0;
- if(data!=NULL) free(data);
+ target->go_start();
 }
 
-void Player::load(unsigned char *audio,unsigned long int total,unsigned long int sample_length)
+void Player::load(Audio *audio)
 {
- this->unload();
- data=audio;
- length=total;
- sample=sample_length;
+ index=0;
+ target=audio;
+ length=target->get_total();
 }
 
 void Player::initialize(Sound *target)
@@ -1030,59 +1171,21 @@ void Player::initialize(Sound *target)
 bool Player::play()
 {
  bool result;
- unsigned long int piece;
- piece=sample;
+ size_t block;
  result=false;
+ block=target->get_block();
  if(index<length)
  {
-  if (piece>length-index) piece=length-index;
+  if (block>(length-index)) block=length-index;
   if (sound->check_busy()==false)
   {
-   sound->play_sample(data+index,piece);
-   index+=piece;
+   sound->play_sample(target->read_block(),block);
+   index+=block;
    result=true;
   }
 
  }
  return result;
-}
-
-void Player::rewind_audio()
-{
- index=0;
-}
-
-void Audio::load_wave(const char *name,Player &player)
-{
- FILE *target;
- WAVE_head head;
- unsigned char *data;
- target=fopen(name,"rb");
- if(target==NULL)
- {
-  puts("Can't open a sound file");
-  exit(EXIT_FAILURE);
- }
- fread(&head,44,1,target);
- if((strncmp(head.riff_signature,"RIFF",4)!=0)&&(strncmp(head.wave_signature,"WAVE",4)!=0))
- {
-  puts("Incorrect sound format");
-  exit(EXIT_FAILURE);
- }
- if((head.type!=1)&&(head.bits!=16))
- {
-  puts("Incorrect sound format");
-  exit(EXIT_FAILURE);
- }
- data=(unsigned char*)calloc(head.sample_length,1);
- if(data==NULL)
- {
-  puts("Can't allocate memory for sound buffer");
-  exit(EXIT_FAILURE);
- }
- fread(data,head.sample_length,1,target);
- fclose(target);
- player.load(data,head.sample_length,head.bytes);
 }
 
 Timer::Timer()

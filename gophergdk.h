@@ -58,15 +58,15 @@ struct WAVE_head
  unsigned long int riff_length:32;
  char wave_signature[4];
  char format[4];
- unsigned long int wave_length:32;
+ unsigned long int description_length:32;
  unsigned short int type:16;
  unsigned short int channels:16;
  unsigned long int rate:32;
- unsigned long int bytes:32;
+ unsigned long int block_length:32;
  unsigned short int align:16;
  unsigned short int bits:16;
- char sample_signature[4];
- unsigned long int sample_length:32;
+ char date_signature[4];
+ unsigned long int date_length:32;
 };
 
 struct IMG_Pixel
@@ -359,28 +359,49 @@ class Binary_File
  bool check_error();
 };
 
+class Audio
+{
+ private:
+ Binary_File target;
+ WAVE_head head;
+ char *buffer;
+ void read_head();
+ void check_riff_signature();
+ void check_wave_signature();
+ void check_type();
+ void check_bits();
+ void check_channels();
+ void check_wave();
+ void clear_buffer();
+ void create_buffer();
+ public:
+ Audio();
+ ~Audio();
+ Audio* get_handle();
+ size_t get_total();
+ size_t get_block();
+ size_t get_block_amount();
+ unsigned long int get_rate();
+ unsigned short int get_channels();
+ void load_wave(const char *name);
+ char *read_block();
+ void go_start();
+};
+
 class Player
 {
  private:
  Sound *sound;
- unsigned char *data;
- unsigned long int sample;
- unsigned long int index;
- unsigned long int length;
+ Audio *target;
+ size_t index;
+ size_t length;
  public:
  Player();
  ~Player();
- void unload();
- void load(unsigned char *audio,unsigned long int total,unsigned long int sample_length);
+ void rewind_audio();
+ void load(Audio *audio);
  void initialize(Sound *target);
  bool play();
- void rewind_audio();
-};
-
-class Audio
-{
- public:
- void load_wave(const char *name,Player &player);
 };
 
 class Timer

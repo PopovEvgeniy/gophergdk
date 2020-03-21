@@ -38,7 +38,8 @@ int main(void)
  timer.set_timer(1);
  sound.initialize();
  player.initialize(sound.get_handle());
- audio.load_wave("space.wav",player);
+ audio.load_wave("space.wav");
+ player.load(audio.get_handle());
  light.set_light(light.get_minimum());
  memset(perfomance,0,8);
  while(1)
