@@ -46,7 +46,7 @@ int main(void)
  {
   screen.update();
   gamepad.update();
-  if (player.play()==false) player.rewind_audio();
+  player.loop();
   if (gamepad.check_press(BUTTON_START)==true) break;
   if (gamepad.check_press(BUTTON_A)==true) ship.mirror_image(MIRROR_HORIZONTAL);
   if (gamepad.check_press(BUTTON_B)==true) ship.mirror_image(MIRROR_VERTICAL);

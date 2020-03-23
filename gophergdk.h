@@ -364,7 +364,6 @@ class Audio
  private:
  Binary_File target;
  WAVE_head head;
- char *buffer;
  void read_head();
  void check_riff_signature();
  void check_wave_signature();
@@ -372,19 +371,17 @@ class Audio
  void check_bits();
  void check_channels();
  void check_wave();
- void clear_buffer();
- void create_buffer();
  public:
  Audio();
  ~Audio();
  Audio* get_handle();
  size_t get_total();
  size_t get_block();
- size_t get_block_amount();
  unsigned long int get_rate();
  unsigned short int get_channels();
+ unsigned short int get_bits();
  void load_wave(const char *name);
- char *read_block();
+ void read_data(void *buffer,const size_t length);
  void go_start();
 };
 
@@ -393,15 +390,21 @@ class Player
  private:
  Sound *sound;
  Audio *target;
+ char *buffer;
  size_t index;
  size_t length;
+ void configure_player(Audio *audio);
+ void clear_buffer();
+ void create_buffer();
  public:
  Player();
  ~Player();
  void rewind_audio();
+ bool is_end();
  void load(Audio *audio);
  void initialize(Sound *target);
- bool play();
+ void play();
+ void loop();
 };
 
 class Timer

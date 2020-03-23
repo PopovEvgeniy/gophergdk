@@ -993,17 +993,11 @@ bool Binary_File::check_error()
 
 Audio::Audio()
 {
- buffer=NULL;
  memset(&head,0,44);
 }
 
 Audio::~Audio()
 {
- if (buffer!=NULL)
- {
-  free(buffer);
-  buffer=NULL;
- }
 
 }
 
@@ -1066,26 +1060,6 @@ void Audio::check_wave()
  this->check_channels();
 }
 
-void Audio::clear_buffer()
-{
- if (buffer!=NULL)
- {
-  free(buffer);
-  buffer=NULL;
- }
-
-}
-
-void Audio::create_buffer()
-{
- buffer=(char*)calloc((size_t)head.block_length,sizeof(char));
- if (buffer==NULL)
- {
-  Halt("Can't allocate memory for audio block");
- }
-
-}
-
 Audio* Audio::get_handle()
 {
  return this;
@@ -1101,11 +1075,6 @@ size_t Audio::get_block()
  return (size_t)head.block_length;
 }
 
-size_t Audio::get_block_amount()
-{
- return this->get_total()/this->get_block();
-}
-
 unsigned long int Audio::get_rate()
 {
  return head.rate;
@@ -1116,20 +1085,22 @@ unsigned short int Audio::get_channels()
  return head.channels;
 }
 
+unsigned short int Audio::get_bits()
+{
+ return head.bits;
+}
+
 void Audio::load_wave(const char *name)
 {
  target.close();
  target.open_read(name);
  this->read_head();
  this->check_wave();
- this->clear_buffer();
- this->create_buffer();
 }
 
-char *Audio::read_block()
+void Audio::read_data(void *buffer,const size_t length)
 {
- target.read(buffer,this->get_block());
- return buffer;
+ target.read(buffer,length);
 }
 
 void Audio::go_start()
@@ -1147,6 +1118,33 @@ Player::Player()
 
 Player::~Player()
 {
+ if (buffer!=NULL) free(buffer);
+}
+
+void Player::configure_player(Audio *audio)
+{
+ index=0;
+ target=audio;
+ length=target->get_total();
+}
+
+void Player::clear_buffer()
+{
+ if (buffer!=NULL)
+ {
+  free(buffer);
+  buffer=NULL;
+ }
+
+}
+
+void Player::create_buffer()
+{
+ buffer=(char*)calloc(target->get_block(),sizeof(char));
+ if (buffer==NULL)
+ {
+  Halt("Can't allocate memory for audio buffer");
+ }
 
 }
 
@@ -1156,11 +1154,22 @@ void Player::rewind_audio()
  target->go_start();
 }
 
+bool Player::is_end()
+{
+ bool end_audio;
+ end_audio=false;
+ if (index==length)
+ {
+  end_audio=true;
+ }
+ return end_audio;
+}
+
 void Player::load(Audio *audio)
 {
- index=0;
- target=audio;
- length=target->get_total();
+ this->configure_player(audio);
+ this->clear_buffer();
+ this->create_buffer();
 }
 
 void Player::initialize(Sound *target)
@@ -1168,24 +1177,35 @@ void Player::initialize(Sound *target)
  sound=target;
 }
 
-bool Player::play()
+void Player::play()
 {
- bool result;
  size_t block;
- result=false;
  block=target->get_block();
  if(index<length)
  {
   if (block>(length-index)) block=length-index;
   if (sound->check_busy()==false)
   {
-   sound->play_sample(target->read_block(),block);
+   target->read_data(buffer,block);
+   sound->play_sample(buffer,block);
    index+=block;
-   result=true;
   }
 
  }
- return result;
+
+}
+
+void Player::loop()
+{
+ if (this->is_end())
+ {
+  this->rewind_audio();
+ }
+ else
+ {
+  this->play();
+ }
+
 }
 
 Timer::Timer()
