@@ -33,24 +33,23 @@ namespace OSS_BACKEND
  volatile size_t sound_buffer_length=0;
  volatile bool run_stream=true;
  volatile bool do_play=false;
- char *sound_buffer=NULL;
 }
 
 namespace GOPHERGDK
 {
 
-void* oss_play_sound(void *argument)
+void* oss_play_sound(void *buffer)
 {
  while (OSS_BACKEND::run_stream)
  {
   if (OSS_BACKEND::do_play)
   {
-   write(OSS_BACKEND::sound_device,OSS_BACKEND::sound_buffer,OSS_BACKEND::sound_buffer_length);
+   write(OSS_BACKEND::sound_device,buffer,OSS_BACKEND::sound_buffer_length);
    OSS_BACKEND::do_play=false;
   }
 
  }
- if (OSS_BACKEND::sound_buffer) free(OSS_BACKEND::sound_buffer);
+ if (buffer!=NULL) free(buffer);
  if (OSS_BACKEND::sound_device!=-1) close(OSS_BACKEND::sound_device);
  return NULL;
 }
@@ -746,6 +745,8 @@ unsigned long int Memory::get_free_memory()
 
 Sound::Sound()
 {
+ internal=NULL;
+ buffer_length=0;
  stream=0;
 }
 
@@ -797,17 +798,29 @@ void Sound::set_rate()
 
 }
 
+void Sound::get_buffer_length()
+{
+ int length;
+ length=0;
+ if (ioctl(OSS_BACKEND::sound_device,SNDCTL_DSP_GETBLKSIZE,&length)==-1)
+ {
+  Halt("Can't get length of sound buffer");
+ }
+ buffer_length=(size_t)length;
+}
+
 void Sound::configure_sound_card()
 {
  this->open_device();
  this->set_format();
  this->set_rate();
  this->set_channels();
+ this->get_buffer_length();
 }
 
 void Sound::start_stream()
 {
- if (pthread_create(&stream,NULL,oss_play_sound,NULL)!=0)
+ if (pthread_create(&stream,NULL,oss_play_sound,internal)!=0)
  {
   Halt("Can't start sound stream");
  }
@@ -816,8 +829,8 @@ void Sound::start_stream()
 
 void Sound::create_buffer()
 {
- OSS_BACKEND::sound_buffer=(char*)calloc(SOUND_BUFFER_LENGTH,sizeof(char));
- if (OSS_BACKEND::sound_buffer==NULL)
+ internal=(char*)calloc(buffer_length,sizeof(char));
+ if (internal==NULL)
  {
   Halt("Can't allocate memory for sound buffer");
  }
@@ -836,6 +849,11 @@ bool Sound::check_busy()
  return OSS_BACKEND::do_play;
 }
 
+size_t Sound::get_length()
+{
+ return buffer_length;
+}
+
 size_t Sound::send(char *buffer,const size_t length)
 {
  size_t amount;
@@ -845,9 +863,9 @@ size_t Sound::send(char *buffer,const size_t length)
  }
  else
  {
-  amount=SOUND_BUFFER_LENGTH;
-  if (length<SOUND_BUFFER_LENGTH) amount=length;
-  memmove(OSS_BACKEND::sound_buffer,buffer,amount);
+  amount=buffer_length;
+  if (length<buffer_length) amount=length;
+  memmove(internal,buffer,amount);
   OSS_BACKEND::sound_buffer_length=length;
   OSS_BACKEND::do_play=true;
  }
@@ -1164,7 +1182,7 @@ void Player::clear_buffer()
 
 void Player::create_buffer()
 {
- buffer=(char*)calloc(SOUND_BUFFER_LENGTH,sizeof(char));
+ buffer=(char*)calloc(sound->get_length(),sizeof(char));
  if (buffer==NULL)
  {
   Halt("Can't allocate memory for audio buffer");
@@ -1205,7 +1223,7 @@ void Player::play()
 {
  size_t block;
  size_t elapsed;
- block=SOUND_BUFFER_LENGTH;
+ block=sound->get_length();
  if(index<length)
  {
   if (sound->check_busy()==false)

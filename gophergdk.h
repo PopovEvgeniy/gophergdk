@@ -42,7 +42,6 @@ SVGALib homepage: http://www.svgalib.org/
 
 #define SOUND_RATE 44100
 #define SOUND_CHANNELS 2
-#define SOUND_BUFFER_LENGTH 2048
 
 #define GAMEPAD_PRESS 1
 #define GAMEPAD_RELEASE 0
@@ -135,7 +134,7 @@ struct Collision_Box
 namespace GOPHERGDK
 {
 
-void* oss_play_sound(void *argument);
+void* oss_play_sound(void *buffer);
 void Halt(const char *message);
 
 class Frame
@@ -311,11 +310,14 @@ class Memory
 class Sound
 {
  private:
+ char *internal;
+ size_t buffer_length;
  pthread_t stream;
  void open_device();
  void set_format();
  void set_channels();
  void set_rate();
+ void get_buffer_length();
  void configure_sound_card();
  void start_stream();
  void create_buffer();
@@ -324,6 +326,7 @@ class Sound
  ~Sound();
  void initialize();
  bool check_busy();
+ size_t get_length();
  size_t send(char *buffer,const size_t length);
  Sound* get_handle();
 };
