@@ -800,13 +800,13 @@ void Sound::set_rate()
 
 void Sound::get_buffer_length()
 {
- int length;
- length=0;
- if (ioctl(OSS_BACKEND::sound_device,SNDCTL_DSP_GETBLKSIZE,&length)==-1)
+ audio_buf_info configuration;
+ memset(&configuration,0,sizeof(audio_buf_info));
+ if (ioctl(OSS_BACKEND::sound_device,SNDCTL_DSP_GETOSPACE,&configuration)==-1)
  {
-  Halt("Can't get length of sound buffer");
+  Halt("Can't read configuration of sound buffer");
  }
- buffer_length=(size_t)length;
+ buffer_length=(size_t)configuration.fragstotal*(size_t)configuration.fragsize;
 }
 
 void Sound::configure_sound_card()
