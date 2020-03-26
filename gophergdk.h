@@ -293,16 +293,21 @@ class Backlight
  unsigned char get_minimum();
  unsigned char get_maximum();
  unsigned char get_level();
+ void set_light(const unsigned char level);
  void increase_level();
  void decrease_level();
  void turn_off();
  void turn_on();
- void set_light(const unsigned char level);
 };
 
 class Memory
 {
+ private:
+ struct sysinfo information;
+ void read_system_information();
  public:
+ Memory();
+ ~Memory();
  unsigned long int get_total_memory();
  unsigned long int get_free_memory();
 };
