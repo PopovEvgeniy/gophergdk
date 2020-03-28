@@ -8,6 +8,7 @@ int main(void)
  GOPHERGDK::Screen screen;
  GOPHERGDK::Gamepad gamepad;
  GOPHERGDK::Sound sound;
+ GOPHERGDK::Mixer volume;
  GOPHERGDK::Audio audio;
  GOPHERGDK::Player player;
  GOPHERGDK::Timer timer;
@@ -37,6 +38,8 @@ int main(void)
  text.set_position(font.get_width(),font.get_height());
  timer.set_timer(1);
  sound.initialize();
+ volume.initialize();
+ volume.set_volume(volume.get_maximum());
  player.initialize(sound.get_handle());
  audio.load_wave("space.wav");
  player.load(audio.get_handle());
@@ -48,6 +51,8 @@ int main(void)
   gamepad.update();
   player.loop();
   if (gamepad.check_press(BUTTON_START)==true) break;
+  if (gamepad.check_press(BUTTON_R)==true) volume.increase_volume();
+  if (gamepad.check_press(BUTTON_L)==true) volume.decrease_volume();
   if (gamepad.check_press(BUTTON_A)==true) ship.mirror_image(MIRROR_HORIZONTAL);
   if (gamepad.check_press(BUTTON_B)==true) ship.mirror_image(MIRROR_VERTICAL);
   if (gamepad.check_press(BUTTON_X)==true) light.increase_level();
