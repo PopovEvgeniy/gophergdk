@@ -41,7 +41,7 @@ SVGALib homepage: http://www.svgalib.org/
 #include <linux/fb.h>
 
 #define SOUND_RATE 44100
-#define SOUND_CHANNELS 2
+#define SOUND_CHANNELS 1
 
 #define GAMEPAD_PRESS 1
 #define GAMEPAD_RELEASE 0
@@ -352,8 +352,6 @@ class Mixer
  void set_volume(const int level);
  void turn_on();
  void turn_off();
- void increase_volume();
- void decrease_volume();
  void initialize();
  int get_minimum();
  int get_maximum();

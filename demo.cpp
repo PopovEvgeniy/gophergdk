@@ -51,8 +51,8 @@ int main(void)
   gamepad.update();
   player.loop();
   if (gamepad.check_press(BUTTON_START)==true) break;
-  if (gamepad.check_press(BUTTON_R)==true) volume.increase_volume();
-  if (gamepad.check_press(BUTTON_L)==true) volume.decrease_volume();
+  if (gamepad.check_press(BUTTON_R)==true) volume.turn_off();
+  if (gamepad.check_press(BUTTON_L)==true) volume.turn_on();
   if (gamepad.check_press(BUTTON_A)==true) ship.mirror_image(MIRROR_HORIZONTAL);
   if (gamepad.check_press(BUTTON_B)==true) ship.mirror_image(MIRROR_VERTICAL);
   if (gamepad.check_press(BUTTON_X)==true) light.increase_level();
