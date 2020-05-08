@@ -979,7 +979,7 @@ int Mixer::get_volume() const
 
 System::System()
 {
- srand(time(NULL));
+ srand(UINT_MAX);
 }
 
 System::~System()
