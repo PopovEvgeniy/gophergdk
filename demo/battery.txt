@@ -1,0 +1,3 @@
+Quick help
+
+Start - Exit
