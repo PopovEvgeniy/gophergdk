@@ -1,6 +1,6 @@
 #include "gophergdk.h"
 
-int main(void)
+int main()
 {
  char level[6];
  GOPHERGDK::Screen screen;

@@ -27,7 +27,7 @@ void draw_map()
 
 }
 
-int main(void)
+int main()
 {
  GOPHERGDK::Screen screen;
  GOPHERGDK::Sprite font;
