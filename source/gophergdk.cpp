@@ -77,12 +77,12 @@ Frame::Frame()
 
 Frame::~Frame()
 {
- if(buffer!=NULL)
+ if (buffer!=NULL)
  {
   free(buffer);
   buffer=NULL;
  }
- if(shadow!=NULL)
+ if (shadow!=NULL)
  {
   free(shadow);
   shadow=NULL;
@@ -96,7 +96,7 @@ unsigned short int *Frame::create_buffer(const char *error)
  pixels=static_cast<size_t>(frame_width)*static_cast<size_t>(frame_height);
  target=static_cast<unsigned short int*>(calloc(pixels,sizeof(unsigned short int)));
  length=pixels*sizeof(unsigned short int);
- if(target==NULL)
+ if (target==NULL)
  {
   Halt(error);
  }
@@ -331,7 +331,7 @@ Render::Render()
 {
  start=0;
  device=open("/dev/fb0",O_RDWR);
- if(device==-1)
+ if (device==-1)
  {
   Halt("Can't get access to frame buffer");
  }
@@ -341,12 +341,12 @@ Render::Render()
 
 Render::~Render()
 {
- if(device!=-1) close(device);
+ if (device!=-1) close(device);
 }
 
 void Render::read_base_configuration()
 {
- if(ioctl(device,FBIOGET_VSCREENINFO,&setting)==-1)
+ if (ioctl(device,FBIOGET_VSCREENINFO,&setting)==-1)
  {
   Halt("Can't read framebuffer setting");
  }
@@ -355,7 +355,7 @@ void Render::read_base_configuration()
 
 void Render::read_advanced_configuration()
 {
- if(ioctl(device,FBIOGET_FSCREENINFO,&configuration)==-1)
+ if (ioctl(device,FBIOGET_FSCREENINFO,&configuration)==-1)
  {
   Halt("Can't read framebuffer setting");
  }
@@ -439,9 +439,9 @@ Gamepad::Gamepad()
 
 Gamepad::~Gamepad()
 {
- if(device!=-1) close(device);
- if(current!=NULL) free(current);
- if(preversion!=NULL) free(preversion);
+ if (device!=-1) close(device);
+ if (current!=NULL) free(current);
+ if (preversion!=NULL) free(preversion);
 }
 
 unsigned char *Gamepad::create_buffer(const char *message)
@@ -569,7 +569,7 @@ bool Gamepad::check_hold(const GAMEPAD_BUTTONS button)
 {
  bool result;
  result=false;
- if(current[button]!=GAMEPAD_RELEASE)
+ if (current[button]!=GAMEPAD_RELEASE)
  {
   result=true;
  }
@@ -604,7 +604,7 @@ Battery::~Battery()
 void Battery::open_device()
 {
  device=fopen("/proc/jz/battery","rt");
- if(device==NULL)
+ if (device==NULL)
  {
   Halt("Can't get access to battery");
  }
@@ -821,7 +821,7 @@ void Sound::set_format()
 {
  int format;
  format=AFMT_S16_LE;
- if(ioctl(OSS_BACKEND::sound_device,SNDCTL_DSP_SETFMT,&format)==-1)
+ if (ioctl(OSS_BACKEND::sound_device,SNDCTL_DSP_SETFMT,&format)==-1)
  {
   Halt("Can't set sound format");
  }
@@ -832,7 +832,7 @@ void Sound::set_channels()
 {
  int channels;
  channels=SOUND_CHANNELS;
- if(ioctl(OSS_BACKEND::sound_device,SNDCTL_DSP_CHANNELS,&channels)==-1)
+ if (ioctl(OSS_BACKEND::sound_device,SNDCTL_DSP_CHANNELS,&channels)==-1)
  {
   Halt("Can't set number of audio channels");
  }
@@ -841,7 +841,7 @@ void Sound::set_channels()
 
 void Sound::set_rate(const int rate)
 {
- if(ioctl(OSS_BACKEND::sound_device,SNDCTL_DSP_SPEED,&rate)==-1)
+ if (ioctl(OSS_BACKEND::sound_device,SNDCTL_DSP_SPEED,&rate)==-1)
  {
   Halt("Can't set sample rate");
  }
@@ -1062,7 +1062,7 @@ bool System::delete_file(const char *name)
 
 void System::enable_logging(const char *name)
 {
- if(freopen(name,"wt",stdout)==NULL)
+ if (freopen(name,"wt",stdout)==NULL)
  {
   Halt("Can't create log file");
  }
@@ -1076,7 +1076,7 @@ Binary_File::Binary_File()
 
 Binary_File::~Binary_File()
 {
- if(target!=NULL)
+ if (target!=NULL)
  {
   fclose(target);
   target=NULL;
@@ -1087,17 +1087,28 @@ Binary_File::~Binary_File()
 void Binary_File::open(const char *name,const char *mode)
 {
  target=fopen(name,mode);
- if(target==NULL)
+ if (target==NULL)
  {
   Halt("Can't open the binary file");
  }
 
 }
 
+void Binary_File::close()
+{
+ if (target!=NULL)
+ {
+  fclose(target);
+  target=NULL;
+ }
+
+}
+
 void Binary_File::create_temp()
 {
+ this->close();
  target=tmpfile();
- if(target==NULL)
+ if (target==NULL)
  {
   Halt("Can't create a temporary file");
  }
@@ -1106,22 +1117,14 @@ void Binary_File::create_temp()
 
 void Binary_File::open_read(const char *name)
 {
+ this->close();
  this->open(name,"rb");
 }
 
 void Binary_File::open_write(const char *name)
 {
+ this->close();
  this->open(name,"w+b");
-}
-
-void Binary_File::close()
-{
- if(target!=NULL)
- {
-  fclose(target);
-  target=NULL;
- }
-
 }
 
 void Binary_File::set_position(const long int offset)
@@ -1157,7 +1160,7 @@ bool Binary_File::check_error()
 {
  bool result;
  result=false;
- if(ferror(target)!=0) result=true;
+ if (ferror(target)!=0) result=true;
  return result;
 }
 
@@ -1353,7 +1356,7 @@ void Player::play()
  size_t block;
  size_t elapsed;
  block=sound->get_length();
- if(index<length)
+ if (index<length)
  {
   if (sound->check_busy()==false)
   {
@@ -1459,9 +1462,9 @@ void Primitive::draw_filled_rectangle(const unsigned long int x,const unsigned l
  unsigned long int step_x,step_y,stop_x,stop_y;
  stop_x=x+width;
  stop_y=y+height;
- for(step_x=x;step_x<stop_x;++step_x)
+ for (step_x=x;step_x<stop_x;++step_x)
  {
-  for(step_y=y;step_y<stop_y;++step_y)
+  for (step_y=y;step_y<stop_y;++step_y)
   {
    surface->draw_pixel(step_x,step_y,color.red,color.green,color.blue);
   }
@@ -1479,14 +1482,14 @@ Image::Image()
 
 Image::~Image()
 {
- if(data!=NULL) free(data);
+ if (data!=NULL) free(data);
 }
 
 unsigned char *Image::create_buffer(const size_t length)
 {
  unsigned char *result;
  result=static_cast<unsigned char*>(calloc(length,sizeof(unsigned char)));
- if(result==NULL)
+ if (result==NULL)
  {
   Halt("Can't allocate memory for image buffer");
  }
@@ -1495,7 +1498,7 @@ unsigned char *Image::create_buffer(const size_t length)
 
 void Image::clear_buffer()
 {
- if(data!=NULL)
+ if (data!=NULL)
  {
   free(data);
   data=NULL;
@@ -1518,13 +1521,13 @@ void Image::load_tga(const char *name)
  target.read(&head,3);
  target.read(&color_map,5);
  target.read(&image,10);
- if((head.color_map!=0)||(image.color!=24))
+ if ((head.color_map!=0)||(image.color!=24))
  {
   Halt("Invalid image format");
  }
- if(head.type!=2)
+ if (head.type!=2)
  {
-  if(head.type!=10)
+  if (head.type!=10)
   {
    Halt("Invalid image format");
   }
@@ -1536,17 +1539,17 @@ void Image::load_tga(const char *name)
  height=image.height;
  uncompressed_length=this->get_length();
  uncompressed=this->create_buffer(uncompressed_length);
- if(head.type==2)
+ if (head.type==2)
  {
   target.read(uncompressed,uncompressed_length);
  }
- if(head.type==10)
+ if (head.type==10)
  {
   compressed=this->create_buffer(compressed_length);
   target.read(compressed,compressed_length);
   while(index<uncompressed_length)
   {
-   if(compressed[position]<128)
+   if (compressed[position]<128)
    {
     amount=compressed[position]+1;
     amount*=3;
@@ -1556,7 +1559,7 @@ void Image::load_tga(const char *name)
    }
    else
    {
-    for(amount=compressed[position]-127;amount>0;--amount)
+    for (amount=compressed[position]-127;amount>0;--amount)
     {
      memmove(uncompressed+index,compressed+(position+1),3);
      index+=3;
@@ -1584,7 +1587,7 @@ void Image::load_pcx(const char *name)
  target.open_read(name);
  length=static_cast<size_t>(target.get_length()-128);
  target.read(&head,128);
- if((head.color*head.planes!=24)&&(head.compress!=1))
+ if ((head.color*head.planes!=24)&&(head.compress!=1))
  {
   Halt("Incorrect image format");
  }
@@ -1620,9 +1623,9 @@ void Image::load_pcx(const char *name)
  }
  free(original);
  original=this->create_buffer(uncompressed_length);
- for(x=0;x<width;++x)
+ for (x=0;x<width;++x)
  {
-  for(y=0;y<height;++y)
+  for (y=0;y<height;++y)
   {
    index=static_cast<size_t>(x)*3+static_cast<size_t>(y)*row;
    position=static_cast<size_t>(x)+static_cast<size_t>(y)*line;
@@ -1674,7 +1677,7 @@ Surface::Surface()
 Surface::~Surface()
 {
  surface=NULL;
- if(image!=NULL) free(image);
+ if (image!=NULL) free(image);
 }
 
 IMG_Pixel *Surface::create_buffer(const unsigned long int image_width,const unsigned long int image_height)
@@ -1683,7 +1686,7 @@ IMG_Pixel *Surface::create_buffer(const unsigned long int image_width,const unsi
  size_t length;
  length=static_cast<size_t>(image_width)*static_cast<size_t>(image_height);
  result=reinterpret_cast<IMG_Pixel*>(calloc(length,3));
- if(result==NULL)
+ if (result==NULL)
  {
   Halt("Can't allocate memory for image buffer");
  }
@@ -1702,7 +1705,7 @@ void Surface::restore()
 
 void Surface::clear_buffer()
 {
- if(image!=NULL)
+ if (image!=NULL)
  {
   free(image);
   image=NULL;
@@ -1759,7 +1762,7 @@ bool Surface::compare_pixels(const size_t first,const size_t second) const
  }
  else
  {
-  if(image[first].blue!=image[second].blue) result=true;
+  if (image[first].blue!=image[second].blue) result=true;
  }
  return result;
 }
@@ -1809,7 +1812,7 @@ void Surface::mirror_image(const MIRROR_TYPE kind)
   }
 
  }
- if(kind==MIRROR_VERTICAL)
+ if (kind==MIRROR_VERTICAL)
  {
    for (x=0;x<width;++x)
   {
@@ -1885,7 +1888,7 @@ void Canvas::increase_frame()
 
 void Canvas::set_frames(const unsigned long int amount)
 {
- if(amount>1) frames=amount;
+ if (amount>1) frames=amount;
 }
 
 unsigned long int Canvas::get_frames() const
@@ -1919,9 +1922,9 @@ Background::~Background()
 void Background::slow_draw_background()
 {
  unsigned long int x,y;
- for(x=0;x<background_width;++x)
+ for (x=0;x<background_width;++x)
  {
-  for(y=0;y<background_height;++y)
+  for (y=0;y<background_height;++y)
   {
    this->draw_image_pixel(this->get_offset(start,x,y),x,y);
   }
@@ -1961,6 +1964,12 @@ void Background::set_kind(const BACKGROUND_TYPE kind)
   break;
  }
  current_kind=kind;
+}
+
+void Background::set_setting(const BACKGROUND_TYPE kind,const unsigned long int frames)
+{
+ if (kind!=NORMAL_BACKGROUND) this->set_frames(frames);
+ this->set_kind(kind);
 }
 
 void Background::set_target(const unsigned long int target)
@@ -2251,9 +2260,9 @@ void Tileset::draw_tile(const unsigned long int x,const unsigned long int y)
 {
  size_t tile_offset;
  unsigned long int tile_x,tile_y;
- for(tile_x=0;tile_x<tile_width;++tile_x)
+ for (tile_x=0;tile_x<tile_width;++tile_x)
  {
-  for(tile_y=0;tile_y<tile_height;++tile_y)
+  for (tile_y=0;tile_y<tile_height;++tile_y)
   {
    tile_offset=offset+this->get_offset(0,tile_x,tile_y);
    this->draw_image_pixel(tile_offset,x+tile_x,y+tile_y);
