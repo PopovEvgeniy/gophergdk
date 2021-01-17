@@ -1,7 +1,7 @@
 /*
 Gopher game development kit license
 
-Copyright (C) 2020 Popov Evgeniy Alekseyevich
+Copyright (C) 2020-2021 Popov Evgeniy Alekseyevich
 
 This software is provided 'as-is', without any express or implied
 warranty.  In no event will the authors be held liable for any damages
@@ -2371,6 +2371,12 @@ void Tileset::draw_tile(const unsigned long int x,const unsigned long int y)
 
  }
 
+}
+
+void Tileset::draw_tile(const unsigned long int row,const unsigned long int column,const unsigned long int x,const unsigned long int y)
+{
+ this->select_tile(row,column);
+ this->draw_tile(x,y);
 }
 
 void Tileset::load_tileset(Image &buffer,const unsigned long int row_amount,const unsigned long int column_amount)
