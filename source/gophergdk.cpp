@@ -661,10 +661,10 @@ void Battery::close_device()
  if (device!=NULL) fclose(device);
 }
 
-unsigned short int Battery::read_battery_level()
+float Battery::read_battery_level()
 {
  fgets(buffer,5,device);
- return atoi(buffer);
+ return atof(buffer);
 }
 
 float Battery::calculate_level(const float current) const

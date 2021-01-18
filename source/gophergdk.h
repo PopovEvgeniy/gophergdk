@@ -276,7 +276,7 @@ class Battery
  char buffer[5];
  void open_device();
  void close_device();
- unsigned short int read_battery_level();
+ float read_battery_level();
  float calculate_level(const float current) const;
  public:
  Battery();
