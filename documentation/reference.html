@@ -357,6 +357,7 @@ Dingux
     <big><br>
     </big>
     <table style="text-align: left; width: 406px; height: 94px;" cellspacing="2"
+
       cellpadding="2" border="1">
       <tbody>
         <tr>
@@ -795,11 +796,20 @@ Dingux
       horizontal collision between two objects is accepted.<br>
       <span style="font-style: italic;">bool
         Collision::check_vertical_collision() const;</span> – Return true if
-      vertical collision between two objects is accepted.<br>
-      <span style="font-style: italic;">bool Collision::check_collision() const;</span>
-      – Return true if horizontal or vertical collision between two objects is
-      accepted.<br>
-      <span style="font-style: italic;">Collision_Box
+      vertical collision between two objects is accepted.</big><br>
+    <big> <span style="font-style: italic;">bool Collision::check_collision()
+        const;</span> – Return true if horizontal or vertical collision between
+      two objects is accepted.</big><br>
+    <big><i>bool Collision::check_horizontal_collision(const Box_Collision
+        &amp;first_target,const Box_Collision &amp;second_target);</i> – Set
+      collision target and check horizontal collision.</big><br>
+    <big><i>bool Collision::check_vertical_collision(const Box_Collision
+        &amp;first_target,const Box_Collision &amp;second_target);</i> – Set
+      collision target and check vertical collision.</big><br>
+    <big><i>bool Collision::check_collision(const Box_Collision
+        &amp;first_target,const Box_Collision &amp;second_target);</i> – Set
+      collision target and check collision.</big><br>
+    <big> <span style="font-style: italic;">Collision_Box
         Collision::generate_box(const unsigned long int x,const unsigned long
         int y,const unsigned long int width,const unsigned long int height)
         const;</span> – Generate collision related information from the object
@@ -1406,6 +1416,7 @@ sound
     <big>1.7 – Source code was synced with Dingux game development kit 4.7.8.</big><br>
     <big>1.7.0.1 – Documentation was updated.</big><br>
     <big>1.7.1 – Source code was synced with Neon game development kit 5.0.5.</big><br>
-    <big>1.7.2 – Small changes.</big>
+    <big>1.7.2 – Small changes.</big><br>
+    <big>1.7.3 – Source code was synced with Neon game development kit 5.0.9.</big>
   </body>
 </html>
