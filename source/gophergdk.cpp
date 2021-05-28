@@ -1473,9 +1473,9 @@ Primitive::~Primitive()
 
 }
 
-void Primitive::initialize(Screen *Screen)
+void Primitive::initialize(Screen *screen)
 {
- surface=Screen;
+ surface=screen;
 }
 
 void Primitive::set_color(const unsigned char red,const unsigned char green,const unsigned char blue)
@@ -1690,15 +1690,15 @@ void Image::load_pcx(const char *name)
   if (original[index]<192)
   {
    uncompressed[position]=original[index];
-   position++;
-   index++;
+   ++position;
+   ++index;
   }
   else
   {
    for (repeat=original[index]-192;repeat>0;--repeat)
    {
     uncompressed[position]=original[index+1];
-    position++;
+    ++position;
    }
    index+=2;
   }
