@@ -10,3 +10,8 @@ tileset:
 	@mipsel-linux-uclibc-g++ tileset.cpp gophergdk.a $(flags) -o tileset_gopher2.dge
 battery:
 	@mipsel-linux-uclibc-g++ battery_level.cpp gophergdk.a $(flags) -o battery_gopher2.dge
+full:
+	@make library
+	@make demo
+	@make tileset
+	@make battery
